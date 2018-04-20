@@ -1,8 +1,29 @@
 //
 // Created by Thomas on 19.04.18.
 //
-
-/* Approach: A Star (A*) algorithm with some custom changes. On a very small grid (like in the examples)
+/* Implement a path-finding algorithm in C++ that finds and returns a shortest path between two points in a 2-dimensional grid.
+ *
+ * Your algorithm should provide an implementation of the following function declaration.
+ *
+ *
+ * int FindPath(const int nStartX, const int nStartY,
+ *            const int nTargetX, const int nTargetY,
+ *            const unsigned char* pMap, const int nMapWidth, const int nMapHeight,
+ *            int* pOutBuffer, const int nOutBufferSize);
+ *
+ * pMap describes a grid of width 𝚗𝙼𝚊𝚙𝚆𝚒𝚍𝚝𝚑 and height 𝚗𝙼𝚊𝚙𝙷𝚎𝚒𝚐𝚑𝚝.
+ * The grid is given in row-major order, each row is given in order of increasing x-coordinate,
+ * and the rows are given in order of increasing y coordinate. Traversable locations of the grid are indicated by 1,
+ * and impassable locations are indicated by 0. Locations are considered to be adjacent horizontally and vertically
+ * but not diagonally.
+ *
+ * pOutBuffer is where you should store the positions visited in the found path, excluding the starting position but including the final position.
+ * Entries in pOutBuffer are indices into pMap. If there is more than one shortest path from Start to Target, any one of them will be accepted.
+ * nOutBufferSize is the maximum number of entries that can be written to pOutBuffer.
+ * [...]
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * *
+ * Approach: A Star (A*) algorithm with some custom changes. On a very small grid (like in the examples)
  * the Dijkstra Algorithm for path finding is probably faster than the simplest version of A*, because A* has to calculate its
  * node elapsing heuristic with every expanding step, but since Dijkstra spreads uninformed into all directions A* is on bigger maps faster.
  * */
