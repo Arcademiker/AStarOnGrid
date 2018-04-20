@@ -3,4 +3,4 @@ project(AStarOnGrid)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(AStarOnGrid main.cpp)
+add_executable(AStarOnGrid main.cpp ExplorationAgenda.cpp ExplorationAgenda.h)
