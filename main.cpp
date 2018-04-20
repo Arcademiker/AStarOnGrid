@@ -3,12 +3,8 @@
 //
 
 /* Approach: A Star (A*) algorithm with some custom changes. On a very small grid (like in the examples)
- * Djikstra for path finding is probably faster than the simplest version of A*, because A* has to calculate its
- * node elapsing heuristic with every expanding step, but since Djikstra
- * //todo ausführen
- * overhead vs datausage vs speed oder so readability
- *
- *
+ * the Dijkstra Algorithm for path finding is probably faster than the simplest version of A*, because A* has to calculate its
+ * node elapsing heuristic with every expanding step, but since Dijkstra spreads uninformed into all directions A* is on bigger maps faster.
  * */
 
 #include <iostream>
@@ -54,8 +50,9 @@ int main() {
 
     //start of the algorithm:
     int nPathLength = FindPath(nStartX, nStartY, nTargetX, nTargetY, pMap, nMapWidth, nMapHeight, pOutBuffer, nOutBufferSize);
-    std::cout << "length of the path: "<< nPathLength << std::endl;
 
+    //print of the array positions and (x,y) coordinates on the shortest path
+    std::cout << "length of the path: "<< nPathLength << std::endl;
     std::cout << "path:" << "\t" <<"x" << "\t" <<"y" << std::endl;
     for(int i=0; i<nPathLength; i++) {
         std::cout<< pOutBuffer[i] << "\t\t" << pOutBuffer[i]%nMapWidth << "\t" << pOutBuffer[i]/nMapWidth << std::endl;
@@ -63,37 +60,43 @@ int main() {
     return 0;
 }
 
-//why not multimap? todo! key=fscore
-
-
 /* A* algorithm pseudo code:
  *
  * load next agenda node
  * explore u d l r (up down left right)
  *   check u d l r for not out of border + not wall (array)
- *   + check u d l r for not already visited
+ *     check u d l r for not already visited
  *       put GScore+1 in visit list
+ *       remember parent node
  *       calc HScore = Manhattan distance current node to target
  *       calc FScore = HScore + GScore+1
  *       put FScore as Key in Priority Queue
- *  repeat (break if target node reached) */
+ *  repeat (break if target node is reached)
+ *       follow the parent nodes back to the start
+ *  return path length or -1 if no such path exists*/
 int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int nTargetY, const unsigned char* pMap,
              const int nMapWidth, const int nMapHeight, int* pOutBuffer, const int nOutBufferSize) {
 
+    //exist a path variable
     bool bPath = false;
+
     int nPathLength = 0;
     //visit start node
     const int nMapSize = nMapHeight*nMapWidth;
 
-    int nX = nStartX;
-    int nY = nStartY;
+    //translate array position on map into x and y values. nNode is a vertex on the grid with four neighbours up down left right
+    int nNode = nStartX+nStartY*nMapWidth;
 
-    int nNode = nX+nY*nMapWidth;
+    //todo why priority queue why not multimap
     auto explorationAgenda = new ExplorationAgenda();
-    //explore start node (which means calculating f score for this node) todo f(n) = g(n)+h(n)
-    explorationAgenda->Add(HScore(nNode,nMapWidth,nTargetX,nTargetY),nNode); //todo! f(n)=h(n)+g(n) nodes grid erklärung
+    //explore start node (which means calculating f(n) score for this node): f(n) = h(n)+g(n)
+    //g(n) := dijsktra distance from start to current node. for the start node = 0
+    //h(n) := manhattan distance form target to current node ignoring all possible walls on the way. h(n) the heuristic for this A*
+    explorationAgenda->Add(HScore(nNode,nMapWidth,nTargetX,nTargetY),nNode);
 
+    //todo why hash map why not a vector
     auto pGScore = new std::unordered_map<int,int>();
+    //iterator to work with unordered map (hash map)
     std::pair<std::unordered_map<int,int>::iterator, bool> itVisited; //todo fix confusing naming
     pGScore->insert(std::make_pair(nNode,0));
 
@@ -102,43 +105,53 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
     //define starting point of the parent tree
     pParentNode->insert({nNode,nNode});
 
-
     int nUp;
     int nDown;
     int nLeft;
     int nRight;
     int nTarget=nTargetX+nTargetY*nMapWidth;
+
+    //main loop of the A* algorithm
     while(nOutBufferSize>nPathLength && !explorationAgenda->IsEmpty()) {
+
+        //set the current node (nNode) to the node with the highest exploration priority (lowest f(n) Score)
         nNode = explorationAgenda->VisitTop();
         nPathLength = (*pGScore)[nNode];
+
+        //abort if target node is reached
         if (nTarget==nNode) {
 
-            for(int i=(*pGScore)[nNode]; i>0; i--) {
+            //find the shortest way back from the target to the start
+            for(int i=nPathLength; i>0; i--) {
                 pOutBuffer[i-1] = nNode;
                 nNode = (*pParentNode)[nNode];
             }
             bPath = true;
             break;
         }
-        //nX = nNode%nMapWidth;
-        //nY = nNode/nMapWidth;
-        //frontier
+
+        //calculate the adjacent nodes of nNode (current Node)
         nUp = nNode-nMapWidth;
         nDown = nNode+nMapWidth;
         nLeft = nNode-1;
         nRight = nNode+1;
-        ///try to visit up. Check outer rim of the map && Check for Walls
+
+        //try to visit up. Check outer rim of the map && Check for Walls
         if( nUp >= 0 && static_cast<bool>(pMap[nUp]) ) {
+            //if insertion is successful "itVisited.second" in the if-statement becomes true
             itVisited = pGScore->insert(std::make_pair(nUp,0));
-            ///don't visit the same node twice
+            //don't visit the same node twice
             if(itVisited.second) {
+                //set the g(n) Score (without doing a second hashmap traversal) by raising the old g(n) by 1
                 itVisited.first->second = (*pGScore)[nNode]+1;
+                //keep track of the last visited node to find the shortest way back
                 pParentNode->insert(std::make_pair(nUp,nNode));
-                ///visit up and write FScore (f(n)=h(n)+g(n)) as key into the priority queue
+                //visit up and write FScore (f(n)=h(n)+g(n)) as key into the priority queue
                 explorationAgenda->Add(HScore(nUp, nMapWidth, nTargetX, nTargetY) + itVisited.first->second, nUp );
             }
         }
 
+        //try to visit adjacent node down... (redundant code but easy readable and efficient)
         if( nDown < nMapSize && static_cast<bool>(pMap[nDown]) ) {
             itVisited = pGScore->insert(std::make_pair(nDown, 0));
             if (itVisited.second) {
@@ -167,6 +180,7 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
         }
     }
 
+    //print of the map
     if(nMapWidth<10 && nMapHeight<10) {
         std::cout << "traversal tree ( g(n) values of a* ):" << std::endl;
         for (int i = 0; i < nMapSize; i++) {
@@ -180,10 +194,11 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
         std::cout << std::endl << std::endl;
     }
 
-
     delete explorationAgenda;
     delete pParentNode;
     delete pGScore;
+
+    //return -1 when there is no way or the nOutBufferSize is too short
     if(!bPath) {
         nPathLength = -1;
         if(nOutBufferSize>nPathLength) {
@@ -191,6 +206,7 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
                       << nOutBufferSize << " (nOutBufferSize)" << std::endl;
         }
     }
+
     return nPathLength;
 }
 

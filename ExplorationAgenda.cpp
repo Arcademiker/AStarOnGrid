@@ -22,7 +22,7 @@ void ExplorationAgenda::Add(int nK, int nV) {
 int ExplorationAgenda::VisitTop() {
     int nV=this->qPriorityQ->top().second;
     this->qPriorityQ->pop();
-    return nV; ///remove pair
+    return nV;
     //todo throw empty exception
 }
 
