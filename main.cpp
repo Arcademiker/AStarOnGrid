@@ -39,7 +39,7 @@ int main() {
                             1, 1, 1, 1, 0, 1,};
     int nMapWidth = 6;
     int nMapHeight = 8;
-    int nOutBufferSize = 11;
+    int nOutBufferSize = 15;
     int pOutBuffer[nOutBufferSize];
 
     // user input check for matching nMapWidth, nMapHeight and nOutBufferSize sizes,
@@ -87,17 +87,28 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
     //translate array position on map into x and y values. nNode is a vertex on the grid with four neighbours up down left right
     int nNode = nStartX+nStartY*nMapWidth;
 
-    //todo why priority queue why not multimap
+    //ExplorationAgenda is a Priority Queue with key value pairs. The pair with the smallest key is on top.
+    //key is the value for the f(n) score of A*.
+    //why priority queue, why not multimap?
+    // the std-priority_queue is faster than the std-multimap, because:
+    //  The typical underlying implementation of a multimap is a balanced red/black tree.
+    //  Repeated element removals from one of the extreme ends of a multimap has a good chance of skewing the tree,
+    //  requiring frequent rebalancing of the entire tree. This is going to be an expensive operation.
     auto explorationAgenda = new ExplorationAgenda();
     //explore start node (which means calculating f(n) score for this node): f(n) = h(n)+g(n)
     //g(n) := dijsktra distance from start to current node. for the start node = 0
     //h(n) := manhattan distance form target to current node ignoring all possible walls on the way. h(n) the heuristic for this A*
     explorationAgenda->Add(HScore(nNode,nMapWidth,nTargetX,nTargetY),nNode);
 
-    //todo why hash map why not a vector
+    //pGScore = g(n)
+    //why hash map, why not a vector?
+    // a vector has a slightly faster access to its elements in many cases, however maps to do pathfinding on can be very big,
+    // especially in modern games. The big advantage of unordered maps (hashmaps) is, they just keep track of the visited elements
+    // If A* has to operate just in a small corner of a big map the whole map vector for the g(n) score has to be set to 0 at first
+    // and would consume storage the whole time the algorithm is in use.
     auto pGScore = new std::unordered_map<int,int>();
     //iterator to work with unordered map (hash map)
-    std::pair<std::unordered_map<int,int>::iterator, bool> itVisited; //todo fix confusing naming
+    std::pair<std::unordered_map<int,int>::iterator, bool> itVisited;
     pGScore->insert(std::make_pair(nNode,0));
 
     //parent Tree to find the shortest path from target back to the start (key = node, value = parent)
