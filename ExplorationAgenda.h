@@ -5,7 +5,6 @@
 #ifndef ASTARONGRID_EXPLORATIONAGENDA_H
 #define ASTARONGRID_EXPLORATIONAGENDA_H
 
-#pragma once
 #include <queue>
 
 class ExplorationAgenda {

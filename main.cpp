@@ -1,8 +1,10 @@
 //
 // Created by Thomas on 19.04.18.
 //
-/* Implement a path-finding algorithm in C++ that finds and returns a shortest path between two points in a 2-dimensional grid.
+/* Path-Finder Problem assignment by Paradox Interactive
  *
+ * Implement a path-finding algorithm in C++ that finds and returns a shortest path between two points in a 2-dimensional grid.
+ * [...]
  * Your algorithm should provide an implementation of the following function declaration.
  *
  *
@@ -11,6 +13,8 @@
  *            const unsigned char* pMap, const int nMapWidth, const int nMapHeight,
  *            int* pOutBuffer, const int nOutBufferSize);
  *
+ * The meaning of the parameters are as follows:
+ * [...]
  * pMap describes a grid of width 𝚗𝙼𝚊𝚙𝚆𝚒𝚍𝚝𝚑 and height 𝚗𝙼𝚊𝚙𝙷𝚎𝚒𝚐𝚑𝚝.
  * The grid is given in row-major order, each row is given in order of increasing x-coordinate,
  * and the rows are given in order of increasing y coordinate. Traversable locations of the grid are indicated by 1,
@@ -21,6 +25,8 @@
  * Entries in pOutBuffer are indices into pMap. If there is more than one shortest path from Start to Target, any one of them will be accepted.
  * nOutBufferSize is the maximum number of entries that can be written to pOutBuffer.
  * [...]
+ *
+ * Consider performance, memory usage and assume that your code may be called from a multi-threaded environment.
  *
  * * * * * * * * * * * * * * * * * * * * * * * *
  * Approach: A Star (A*) algorithm with some custom changes. On a very small grid (like in the examples)
@@ -42,7 +48,6 @@ int FindPath(int nStartX, int nStartY,
 
 int HScore(int nNode, int nMapWidth, int nTargetX, int nTargetY);
 
-class ExplorationAgenda;
 
 int main() {
     // user input:
@@ -137,10 +142,9 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
     //define starting point of the parent tree
     pParentNode->insert({nNode,nNode});
 
-    int nUp;
-    int nDown;
-    int nLeft;
-    int nRight;
+    //direction up = 0, left = 1, down = 2, right = 3
+    int nDir[4];
+    bool bDirBorder[4];
     int nTarget=nTargetX+nTargetY*nMapWidth;
 
     //main loop of the A* algorithm
@@ -163,56 +167,38 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
         }
 
         //calculate the adjacent nodes of nNode (current Node)
-        nUp = nNode-nMapWidth;
-        nDown = nNode+nMapWidth;
-        nLeft = nNode-1;
-        nRight = nNode+1;
+        nDir[0] = nNode-nMapWidth;  //move up in array coordinates
+        nDir[2] = nNode+nMapWidth;  //move down in array coordinates
+        nDir[1] = nNode-1;          //move left in array coordinates
+        nDir[3] = nNode+1;          //move right in array coordinates
 
-        //try to visit up. Check outer rim of the map && Check for Walls
-        if( nUp >= 0 && static_cast<bool>(pMap[nUp]) ) {
-            //if insertion is successful "itVisited.second" in the if-statement becomes true
-            itVisited = pGScore->insert(std::make_pair(nUp,0));
-            //don't visit the same node twice
-            if(itVisited.second) {
-                //set the g(n) Score (without doing a second hashmap traversal) by raising the old g(n) by 1
-                itVisited.first->second = (*pGScore)[nNode]+1;
-                //keep track of the last visited node to find the shortest way back
-                pParentNode->insert(std::make_pair(nUp,nNode));
-                //visit up and write FScore (f(n)=h(n)+g(n)) as key into the priority queue
-                explorationAgenda->Add(HScore(nUp, nMapWidth, nTargetX, nTargetY) + itVisited.first->second, nUp );
-            }
-        }
+        //check if one of the previous move (nDir[]) calculations has crossed the pseudo matrix borders (which is represented by the pMap array)
+        bDirBorder[0] = nDir[0] >= 0;
+        bDirBorder[2] = nDir[2] < nMapSize;
+        bDirBorder[1] = nDir[1] >= nNode/nMapWidth*nMapWidth;
+        bDirBorder[3] = nDir[3] < nNode/nMapWidth*nMapWidth+nMapWidth;
 
-        //try to visit adjacent node down... (redundant code but easy readable and efficient)
-        if( nDown < nMapSize && static_cast<bool>(pMap[nDown]) ) {
-            itVisited = pGScore->insert(std::make_pair(nDown, 0));
-            if (itVisited.second) {
-                itVisited.first->second = (*pGScore)[nNode] + 1;
-                pParentNode->insert(std::make_pair(nDown,nNode));
-                explorationAgenda->Add(HScore(nDown, nMapWidth, nTargetX, nTargetY) + itVisited.first->second, nDown);
-            }
-        }
-
-        if( nLeft >= nNode/nMapWidth*nMapWidth && static_cast<bool>(pMap[nLeft]) ) {
-            itVisited = pGScore->insert(std::make_pair(nLeft, 0));
-            if (itVisited.second) {
-                itVisited.first->second = (*pGScore)[nNode] + 1;
-                pParentNode->insert(std::make_pair(nLeft,nNode));
-                explorationAgenda->Add(HScore(nLeft, nMapWidth, nTargetX, nTargetY) + itVisited.first->second, nLeft);
-            }
-        }
-
-        if( nRight < nNode/nMapWidth*nMapWidth+nMapWidth && static_cast<bool>(pMap[nRight]) ) {
-            itVisited = pGScore->insert(std::make_pair(nRight, 0));
-            if (itVisited.second) {
-                itVisited.first->second = (*pGScore)[nNode] + 1;
-                pParentNode->insert(std::make_pair(nRight,nNode));
-                explorationAgenda->Add(HScore(nRight, nMapWidth, nTargetX, nTargetY) + itVisited.first->second, nRight);
+        //try to visit each direction (up, left, down and right)
+        for(int d=0; d<4; d++) {
+            //Check outer rim of the map && Check for Walls
+            if (bDirBorder[d] && static_cast<bool>(pMap[nDir[d]])) {
+                //if insertion is successful "itVisited.second" in the if-statement becomes true
+                itVisited = pGScore->insert(std::make_pair(nDir[d], 0));
+                //don't visit the same node twice
+                if (itVisited.second) {
+                    //set the g(n) Score (without doing a second hashmap traversal) by raising the old g(n) by 1
+                    itVisited.first->second = (*pGScore)[nNode] + 1;
+                    //keep track of the last visited node to find the shortest way back
+                    pParentNode->insert(std::make_pair(nDir[d], nNode));
+                    //visit up and write FScore (f(n)=h(n)+g(n)) as key into the priority queue
+                    explorationAgenda->Add(HScore(nDir[d], nMapWidth, nTargetX, nTargetY) + itVisited.first->second, nDir[d]);
+                }
             }
         }
     }
+    //end of the A* Algorithm
 
-    //print of the map
+    //print the map
     if(nMapWidth<10 && nMapHeight<10) {
         std::cout << "traversal tree ( g(n) values of a* ):" << std::endl;
         for (int i = 0; i < nMapSize; i++) {
