@@ -51,11 +51,11 @@ int HScore(int nNode, int nMapWidth, int nTargetX, int nTargetY);
 
 int main() {
     // user input:
-    int nStartX = 1;
+    int nStartX = 2;
     int nStartY = 0;
-    int nTargetX = 5;
-    int nTargetY = 7;
-    unsigned char pMap[] = {1, 1, 1, 1, 1, 1,
+    int nTargetX = 0;
+    int nTargetY = 2;
+    unsigned char pMap2[] = {1, 1, 1, 1, 1, 1,
                             1, 1, 1, 0, 0, 1,
                             1, 1, 1, 1, 0, 1,
                             0, 1, 0, 1, 1, 0,
@@ -63,9 +63,17 @@ int main() {
                             1, 0, 1, 0, 0, 1,
                             1, 0, 1, 1, 1, 1,
                             1, 1, 1, 1, 0, 1,};
-    int nMapWidth = 6;
-    int nMapHeight = 8;
-    int nOutBufferSize = 15;
+
+
+    unsigned char pMap3[] = {1, 1, 1, 1,
+                            0, 1, 0, 1,
+                            0, 1, 1, 1};
+    unsigned char pMap[] = {0, 0, 1,
+                            0, 1, 1,
+                            1, 0, 1};
+    int nMapWidth = 3;
+    int nMapHeight = 3;
+    int nOutBufferSize = 7;
     int pOutBuffer[nOutBufferSize];
 
     // user input check for matching nMapWidth, nMapHeight and nOutBufferSize sizes,
@@ -218,11 +226,11 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
 
     //return -1 when there is no way or the nOutBufferSize is too short
     if(!bPath) {
-        nPathLength = -1;
-        if(nOutBufferSize>nPathLength) {
+        if(nOutBufferSize<=nPathLength) {
             std::cout << std::endl << "Pathfinding was aborted, because there is no way to the target within the distance of "
                       << nOutBufferSize << " (nOutBufferSize)" << std::endl;
         }
+        nPathLength = -1;
     }
 
     return nPathLength;
