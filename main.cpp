@@ -48,29 +48,31 @@ int FindPath(int nStartX, int nStartY,
 
 int HScore(int nNode, int nMapWidth, int nTargetX, int nTargetY);
 
+class ExplorationAgenda;
+
 
 int main() {
     // user input:
-    int nStartX = 0;
-    int nStartY = 0;
+    int nStartX = 1;
+    int nStartY = 1;
     int nTargetX = 5;
     int nTargetY = 7;
     unsigned char pMap[] = {1, 1, 1, 1, 1, 1,
-                            1, 0, 1, 0, 0, 1,
-                            1, 1, 1, 1, 0, 1,
-                            0, 1, 0, 1, 1, 1,
-                            1, 1, 1, 1, 0, 0,
-                            1, 0, 1, 0, 0, 1,
+                            1, 1, 0, 1, 0, 1,
+                            1, 0, 1, 1, 0, 1,
+                            1, 1, 1, 0, 0, 1,
+                            1, 1, 1, 1, 1, 1,
+                            1, 0, 1, 0, 1, 0,
                             1, 0, 1, 1, 1, 1,
                             1, 1, 1, 1, 0, 1,};
-
-
+    /*
     unsigned char pMap3[] = {1, 1, 1, 1,
                             0, 1, 0, 1,
                             0, 1, 1, 1};
     unsigned char pMap1[] = {0, 0, 1,
                             0, 1, 1,
                             1, 0, 1};
+    */
     int nMapWidth = 6;
     int nMapHeight = 8;
     int nOutBufferSize = 15;
@@ -97,8 +99,8 @@ int main() {
 /* A* algorithm pseudo code:
  *
  * load next agenda node
- * explore u d l r (up down left right)
- *   check u d l r for not out of border + not wall (array)
+ * explore u l d r (up down left right)
+ *   check u l d r for not out of border + not wall (array)
  *     check u d l r for not already visited
  *       put GScore+1 in visit list
  *       remember parent node
@@ -186,7 +188,7 @@ int FindPath(const int nStartX, const int nStartY, const int nTargetX, const int
         bDirBorder[1] = nDir[1] >= nNode/nMapWidth*nMapWidth;
         bDirBorder[3] = nDir[3] < nNode/nMapWidth*nMapWidth+nMapWidth;
 
-        //try to visit each direction (up, left, down and right)
+        //try to visit each direction (up d=0, left d=1, down d=2 and right d=3)
         for(int d=0; d<4; d++) {
             //Check outer rim of the map && Check for Walls
             if (bDirBorder[d] && static_cast<bool>(pMap[nDir[d]])) {
