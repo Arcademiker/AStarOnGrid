@@ -5,3 +5,5 @@ Approach: A Star (A*) algorithm with some custom changes. On a very small grid (
 the Dijkstra Algorithm for path finding is probably faster than the simplest version of A*,
 because A* has to calculate its node elapsing heuristic with every expanding step,
 but since Dijkstra spreads uninformed into all directions A* is on bigger maps faster.
+
+A 3D variation of this algorithm for spherical shaped graphs: https://github.com/Arcademiker/AStarOnSpheres
